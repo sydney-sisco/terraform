@@ -18,17 +18,17 @@ resource "aws_security_group" "minecraft_server" {
   vpc_id      = "" # FIXME: retrieve vpc id from remote state
 
   tags = {
-    Name = "minecraft-server"
+    Name        = "minecraft-server"
     application = "minecraft"
   }
 }
 
 # Minecraft uses port 25565
 resource "aws_security_group_rule" "allow_minecraft_port" {
-  type            = "ingress"
-  from_port       = 25565
-  to_port         = 25565
-  protocol        = "tcp"
+  type      = "ingress"
+  from_port = 25565
+  to_port   = 25565
+  protocol  = "tcp"
 
   cidr_blocks = ["0.0.0.0/0"]
 
@@ -37,25 +37,25 @@ resource "aws_security_group_rule" "allow_minecraft_port" {
 
 # Allow SSH from a specific list of IPs
 resource "aws_security_group_rule" "allow_ssh" {
-  type            = "ingress"
-  from_port       = 22
-  to_port         = 22
-  protocol        = "tcp"
-  
+  type      = "ingress"
+  from_port = 22
+  to_port   = 22
+  protocol  = "tcp"
+
   cidr_blocks = [
     "64.46.11.141/32" #Syd Sisco IP
-    ]
+  ]
 
   security_group_id = aws_security_group.minecraft_server.id
 }
 
 # Allow all outbound traffic
 resource "aws_security_group_rule" "allow_all_outbound" {
-  type            = "egress"
-  from_port       = 0
-  to_port         = 65535
-  protocol = "all"
-  
+  type      = "egress"
+  from_port = 0
+  to_port   = 65535
+  protocol  = "all"
+
   cidr_blocks = ["0.0.0.0/0"]
 
   security_group_id = aws_security_group.minecraft_server.id
@@ -165,15 +165,15 @@ data "aws_ami" "ubuntu_18_latest" {
 
 # The EC2 instance that will serve as the Minecraft server
 resource "aws_instance" "server" {
-  ami           = data.aws_ami.ubuntu_18_latest.id
-  instance_type = "t2.medium"
-  key_name = var.ssh_key_name
+  ami                    = data.aws_ami.ubuntu_18_latest.id
+  instance_type          = "t2.medium"
+  key_name               = var.ssh_key_name
   vpc_security_group_ids = [aws_security_group.minecraft_server.id]
-  iam_instance_profile = aws_iam_instance_profile.minecraft_server.arn
+  iam_instance_profile   = aws_iam_instance_profile.minecraft_server.arn
   # user_data = file("files/userdata.tmpl") # TODO: create user data to install cloudwatch agent (maybe pull config file from S3?)
 
   tags = {
-    Name = "minecraft-server"
+    Name        = "minecraft-server"
     application = "minecraft"
   }
 }
