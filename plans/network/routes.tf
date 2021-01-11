@@ -1,25 +1,3 @@
-resource "aws_route_table" "public" {
-  vpc_id = "${aws_vpc.main.id}"
-
-  tags = {
-    Name = "public routes"
-  }
-}
-
-resource "aws_route" "pub-igw" {
-  route_table_id            = "${aws_route_table.public.id}"
-  destination_cidr_block    = "0.0.0.0/0"
-  gateway_id = "${aws_internet_gateway.igw.id}"
-  depends_on                = ["aws_route_table.public"]
-}
-
-resource "aws_route_table_association" "public" {
-  count = 3
-  subnet_id      = "${aws_subnet.public.*.id[count.index]}"
-  route_table_id = "${aws_route_table.public.id}"
-}
-
-
 resource "aws_route_table" "private" {
   vpc_id = "${aws_vpc.main.id}"
   

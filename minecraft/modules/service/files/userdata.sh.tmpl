@@ -1,0 +1,46 @@
+#!/bin/bash -x
+
+apt-mark hold grub-pc
+sudo apt-get update
+sudo apt-get upgrade -y
+apt-get install openjdk-8-jre -y
+apt-get install awscli -y
+apt-get install unzip -y
+apt-get install python3-pip -y
+apt-get install redis-server -y
+pip3 install redis
+pip3 install boto3 #aws sdk
+
+mkdir /opt/minecraft/
+chown -R ubuntu:ubuntu /opt/minecraft/
+
+# run commands as ubuntu 
+su - ubuntu <<'EOF'
+whoami
+cd /opt/minecraft/
+aws s3 cp s3://${bucket_name} . --recursive
+
+chmod +x minecraft-server-population-check.py
+
+unzip FTBUltimateReloadedServer_1.9.0.zip -d FTBUltimateReloadedServer_1.9.0
+cd FTBUltimateReloadedServer_1.9.0/
+rm *.bat
+
+chmod +x *.sh
+./FTBInstall.sh
+echo "eula=true" > eula.txt
+
+# modify default settings
+sed -i 's/player-idle-timeout=0/player-idle-timeout=30/' server.properties
+sed -i 's/force_on_shutdown=false/force_on_shutdown=true/' config/ftbbackups.cfg
+sed -i 's/motd=.*/motd=A server run by Syd!/' server.properties
+echo "export MAX_RAM=\"3072M\"" > settings-local.sh
+rm server-icon.png && cp /opt/minecraft/server-icon.png .
+
+# start a screen session and launch the server within it
+screen -S minecraft -d -m
+screen -r "minecraft" -X stuff $'./ServerStart.sh\n'
+
+EOF
+
+echo "* * * * * ubuntu /usr/bin/python3 /opt/minecraft/minecraft-server-population-check.py > /tmp/minecraft-server-population-check.out" > /etc/cron.d/minecraft-server-population-check
